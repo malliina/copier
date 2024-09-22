@@ -15,7 +15,7 @@ class CopierTests extends munit.CatsEffectSuite:
 
   test("Copy files".ignore):
     val copier = Copier.dji[IO]
-    copier.copy.compile.toList
+    copier.copyToList
       .map: ps =>
         val paths = ps.collect:
           case Right(path) => path

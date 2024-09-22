@@ -7,6 +7,8 @@ import com.malliina.logback.LogbackUtils
 import fs2.Stream
 import fs2.io.file.{Files, Path}
 
+import java.nio.file.FileSystemException
+
 object Copier:
   private val log = AppLogger(getClass)
   LogbackUtils.init()
@@ -38,7 +40,18 @@ class Copier[F[_]: Files: Async](
     .evalFilter(p => F.isRegularFile(p))
     .filter(p => include(p))
 
-  def copy: Stream[F, Either[Throwable, Path]] = srcFiles
+  def copyToList: F[List[Either[Throwable, Path]]] =
+    copy.compile.toList
+
+  def copy: Stream[F, Either[Throwable, Path]] =
+    Stream.eval(checkWritable) >> copyFiles
+
+  private def checkWritable: F[Path] = F
+    .isWritable(to)
+    .flatMap: isWritable =>
+      if isWritable then S.pure(to) else S.raiseError(FileSystemException(s"Not writable: '$to'."))
+
+  private def copyFiles: Stream[F, Either[Throwable, Path]] = srcFiles
     .map(src => (src, to.resolve(src.fileName)))
     .evalFilter((_, dest) => F.exists(dest).map(e => !e))
     .parEvalMap(2): (src, dest) =>
