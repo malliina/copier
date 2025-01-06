@@ -2,12 +2,12 @@ val copier = project
   .in(file("."))
   .settings(
     version := "0.0.1",
-    scalaVersion := "3.4.0",
+    scalaVersion := "3.6.2",
     libraryDependencies ++= Seq(
-      "com.malliina" %% "logback-fs2" % "2.8.0",
-      "co.fs2" %% "fs2-io" % "3.10.2",
-      "ch.qos.logback" % "logback-classic" % "1.5.6",
-      "org.scalameta" %% "munit" % "1.0.1" % Test,
+      "com.malliina" %% "logback-fs2" % "2.8.1",
+      "co.fs2" %% "fs2-io" % "3.11.0",
+      "ch.qos.logback" % "logback-classic" % "1.5.15",
+      "org.scalameta" %% "munit" % "1.0.3" % Test,
       "org.typelevel" %% "munit-cats-effect" % "2.0.0" % Test
     )
   )

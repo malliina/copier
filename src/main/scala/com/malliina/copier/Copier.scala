@@ -1,6 +1,7 @@
 package com.malliina.copier
 
 import cats.effect.Async
+import cats.implicits.catsSyntaxFlatMapOps
 import cats.syntax.all.{catsSyntaxApplicativeError, toFlatMapOps, toFunctorOps}
 import com.malliina.copier.Copier.log
 import com.malliina.logback.LogbackUtils
@@ -49,7 +50,8 @@ class Copier[F[_]: Files: Async](
   private def checkWritable: F[Path] = F
     .isWritable(to)
     .flatMap: isWritable =>
-      if isWritable then S.pure(to) else S.raiseError(FileSystemException(s"Not writable: '$to'."))
+      if isWritable then writeLog(s"Directory '$to' is writable.") >> S.pure(to)
+      else S.raiseError(FileSystemException(s"Not writable: '$to'."))
 
   private def copyFiles: Stream[F, Either[Throwable, Path]] = srcFiles
     .map(src => (src, to.resolve(src.fileName)))
