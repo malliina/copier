@@ -2,7 +2,7 @@ val copier = project
   .in(file("."))
   .settings(
     version := "0.0.1",
-    scalaVersion := "3.6.4",
+    scalaVersion := "3.7.1",
     libraryDependencies ++= Seq(
       "com.malliina" %% "logback-fs2" % "2.8.3",
       "co.fs2" %% "fs2-io" % "3.11.0",
