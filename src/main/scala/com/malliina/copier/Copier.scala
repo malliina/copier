@@ -67,5 +67,5 @@ class Copier[F[_]: {Files, Async}](
           d.fold(err => s"Failed to copy $src to $dest. $err", f => s"Copied $src to $f.")
         )
       yield d
-
+  
   private def writeLog(msg: String): F[Unit] = S.delay(log.info(msg))
