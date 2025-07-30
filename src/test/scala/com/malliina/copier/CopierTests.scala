@@ -25,6 +25,14 @@ class CopierTests extends munit.CatsEffectSuite:
         log.info(s"Wrote ${paths.size} files: ${paths.mkString(", ")}")
         assertEquals(1, 1)
 
+  test("Encode dir".ignore):
+    val enc = DirEncoder.fitcamx[IO]
+    enc.encodeAll.compile.toList.map: ps =>
+      val paths = ps.collect:
+        case Right(path) => path
+      log.info(s"Wrote ${paths.size} files: ${paths.mkString(", ")}")
+      assertEquals(1, 1)
+
   test("Encode file".ignore):
     val encoder = VideoEncoder[IO]
     val dir = Path("/Users/michael.skogberg/fitcamx")

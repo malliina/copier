@@ -1,26 +1,48 @@
 package com.malliina.copier
 
-import cats.effect.{Async, Concurrent, Resource}
-import cats.syntax.all.{toFlatMapOps, toFunctorOps}
+import cats.effect.{Async, Resource}
+import cats.syntax.all.{catsSyntaxApplicativeError, toFlatMapOps, toFunctorOps}
 import com.malliina.copier.VideoEncoder.log
 import com.malliina.logback.LogbackUtils
-import fs2.io.file.Path
+import fs2.io.file.{Files, Path}
 import fs2.io.process.{ProcessBuilder, Processes}
-import fs2.{Stream, text}
+import fs2.text
 
-case class ProcessResult(exitValue: Int, stdout: String, stderr: String)
+object DirEncoder:
+  private val log = AppLogger(getClass)
+  LogbackUtils.init()
 
-case class LaunchedProcess[F[_]: Concurrent](
-  exitValue: F[Int],
-  stdout: Stream[F, String],
-  stderr: Stream[F, String]
-):
-  val std = stdout.merge(stderr)
-  def await = for
-    exit <- exitValue
-    out <- stdout.compile.string
-    err <- stderr.compile.string
-  yield ProcessResult(exit, out, err)
+  def fitcamx[F[_]: {Async, Processes}] =
+    DirEncoder[F](
+      Path("/Volumes/pi/Fitcamx"),
+      Path("/Volumes/pi/Fitcamx/encoded"),
+      p => p.extName == ".TS"
+    )
+
+class DirEncoder[F[_]: {Async, Files, Processes}](
+  from: Path,
+  to: Path,
+  include: Path => Boolean
+) extends FileHandler[F]:
+  private val enc = VideoEncoder[F]
+
+  def encodeAll = processAll(from, to, include)
+
+  override def destFile(src: Path) = Path(src.fileName.toString + ".mp4")
+
+  override def process(src: Path, dest: Path): F[Unit] =
+    for
+      _ <- writeLog(s"Encoding $src to $dest...")
+      res <- enc
+        .encodeAwait(src, dest)
+        .flatMap: res =>
+          if res.exitValue == 0 then S.pure(res)
+          else S.raiseError(Exception(s"Unexpected exit value: ${res.exitValue}.\n${res.stderr}"))
+        .flatMap: _ =>
+          writeLog(s"Encoded $src to $dest.")
+        .onError: err =>
+          writeLog(s"Failed to encode $src to $dest. $err")
+    yield res
 
 object VideoEncoder:
   private val log = AppLogger(getClass)
