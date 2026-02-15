@@ -14,21 +14,21 @@ object Copier:
   private val log = AppLogger(getClass)
   LogbackUtils.init()
 
-  def fitcamx[F[_]: Files: Async] =
+  def fitcamx[F[_]: {Files, Async}] =
     Copier[F](
       from = Path("/Volumes/Untitled"),
       to = Path("/Volumes/pi/Fitcamx"),
       p => p.extName == ".TS"
     )
 
-  def dji[F[_]: Files: Async] =
+  def dji[F[_]: {Files, Async}] =
     Copier[F](
       from = Path("/Volumes/Untitled"),
       to = Path("/Volumes/pi/DJI"),
       p => Seq(".MP4", ".JPG").contains(p.extName)
     )
 
-class Copier[F[_]: Files: Async](
+class Copier[F[_]: {Files, Async}](
   from: Path,
   to: Path,
   include: Path => Boolean
